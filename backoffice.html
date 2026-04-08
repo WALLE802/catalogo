@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backoffice - Administración de Productos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #1a1a2e;
+            min-height: 100vh;
+            padding: 20px;
+            color: white;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 30px;
+            background: rgba(26, 26, 46, 0.8);
+            border-radius: 15px;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            color: #ff0000;
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            color: #ccc;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .actions-bar {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: #ff0000;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #cc0000;
+            transform: translateY(-2px);
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+        
+        .btn-warning {
+            background: #ffc107;
+            color: #333;
+        }
+        
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        
+        .productos-table {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        thead {
+            background: #1a1a2e;
+            color: white;
+        }
+        
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.9em;
+        }
+        
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            color: #333;
+        }
+        
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .producto-img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+            background: #5a5a5a;
+        }
+        
+        .precio {
+            font-weight: 700;
+            color: #1a1a2e;
+            font-size: 1.2em;
+        }
+        
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 0.85em;
+            margin-right: 5px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+            color: #333;
+        }
+        
+        .modal-content h2 {
+            margin-bottom: 20px;
+            color: #1a1a2e;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #ff0000;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 25px;
+        }
+        
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .alert.show {
+            display: block;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 BACKOFFICE</h1>
+            <p>Panel de Administración de Productos</p>
+        </div>
+        
+        <div id="alert" class="alert"></div>
+        
+        <div class="actions-bar">
+            <button class="btn btn-primary" onclick="abrirModalAgregar()">
+                ➕ Agregar Producto
+            </button>
+            <button class="btn btn-warning" onclick="abrirModalSubirExcel()">
+                📤 Subir Excel
+            </button>
+            <button class="btn btn-success" onclick="regenerarCatalogo()">
+                🔄 Regenerar Catálogo Público
+            </button>
+        </div>
+        
+        <div class="productos-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Imagen</th>
+                        <th>Nombre</th>
+                        <th>Precio</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="productosTableBody">
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 40px;">
+                            Cargando productos...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Modal Agregar/Editar -->
+    <div id="productoModal" class="modal">
+        <div class="modal-content">
+            <h2 id="modalTitle">Agregar Producto</h2>
+            <form id="productoForm" onsubmit="guardarProducto(event)">
+                <input type="hidden" id="productoId" value="">
+                
+                <div class="form-group">
+                    <label>URL de la Imagen</label>
+                    <input type="text" id="productoImagen" required placeholder="https://...">
+                </div>
+                
+                <div class="form-group">
+                    <label>Nombre del Producto</label>
+                    <input type="text" id="productoNombre" required placeholder="Ej: Zapatillas New Balance 574">
+                </div>
+                
+                <div class="form-group">
+                    <label>Precio</label>
+                    <input type="number" id="productoPrecio" required step="0.01" placeholder="15000">
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn" onclick="cerrarModal()" style="background: #6c757d; color: white;">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        Guardar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Modal Subir Excel -->
+    <div id="excelModal" class="modal">
+        <div class="modal-content">
+            <h2>📤 Subir Archivo Excel</h2>
+            <p style="margin-bottom: 20px; color: #666;">
+                El archivo debe tener el mismo formato:<br>
+                <strong>Columna A:</strong> URL de imagen<br>
+                <strong>Columna C:</strong> Nombre del producto<br>
+                <strong>Columna D:</strong> Precio
+            </p>
+            <form id="excelForm" onsubmit="subirExcel(event)">
+                <div class="form-group">
+                    <label>Seleccionar archivo Excel (.xlsx o .xls)</label>
+                    <input type="file" id="excelFile" accept=".xlsx,.xls" required 
+                           style="padding: 8px; border: 2px dashed #ddd; border-radius: 8px; width: 100%;">
+                </div>
+                
+                <div class="form-group">
+                    <label>Acción</label>
+                    <select id="accionExcel" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 8px; font-size: 1em;">
+                        <option value="reemplazar">Reemplazar todos los productos</option>
+                        <option value="agregar">Agregar a los productos existentes</option>
+                    </select>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn" onclick="cerrarModalExcel()" style="background: #6c757d; color: white;">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-warning">
+                        📤 Subir Excel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        let productos = [];
+        
+        // Cargar productos al inicio
+        document.addEventListener('DOMContentLoaded', () => {
+            cargarProductos();
+        });
+        
+        async function cargarProductos() {
+            try {
+                const response = await fetch('/api/productos');
+                const data = await response.json();
+                
+                if (data.success) {
+                    productos = data.productos;
+                    renderizarProductos();
+                } else {
+                    mostrarAlerta('Error al cargar productos: ' + data.error, 'error');
+                }
+            } catch (error) {
+                mostrarAlerta('Error de conexión: ' + error.message, 'error');
+            }
+        }
+        
+        function renderizarProductos() {
+            const tbody = document.getElementById('productosTableBody');
+            
+            if (productos.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 40px;">
+                            No hay productos. Agrega uno para comenzar.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = productos.map(p => `
+                <tr>
+                    <td>${p.id}</td>
+                    <td>
+                        <img src="${p.imagen}" class="producto-img" 
+                             onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2280%22 height=%2280%22%3E%3Crect fill=%22%23ddd%22 width=%2280%22 height=%2280%22/%3E%3C/svg%3E'">
+                    </td>
+                    <td>${p.nombre}</td>
+                    <td class="precio">$${p.precio.toLocaleString('es-AR', {minimumFractionDigits: 2})}</td>
+                    <td>
+                        <button class="btn btn-warning btn-small" onclick="editarProducto(${p.id})">
+                            ✏️ Editar
+                        </button>
+                        <button class="btn btn-danger btn-small" onclick="eliminarProducto(${p.id})">
+                            🗑️ Eliminar
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function abrirModalAgregar() {
+            document.getElementById('modalTitle').textContent = 'Agregar Producto';
+            document.getElementById('productoId').value = '';
+            document.getElementById('productoForm').reset();
+            document.getElementById('productoModal').classList.add('active');
+        }
+        
+        function editarProducto(id) {
+            const producto = productos.find(p => p.id === id);
+            if (!producto) return;
+            
+            document.getElementById('modalTitle').textContent = 'Editar Producto';
+            document.getElementById('productoId').value = id;
+            document.getElementById('productoImagen').value = producto.imagen;
+            document.getElementById('productoNombre').value = producto.nombre;
+            document.getElementById('productoPrecio').value = producto.precio;
+            document.getElementById('productoModal').classList.add('active');
+        }
+        
+        function cerrarModal() {
+            document.getElementById('productoModal').classList.remove('active');
+        }
+        
+        async function guardarProducto(event) {
+            event.preventDefault();
+            
+            const id = document.getElementById('productoId').value;
+            const data = {
+                imagen: document.getElementById('productoImagen').value,
+                nombre: document.getElementById('productoNombre').value,
+                precio: parseFloat(document.getElementById('productoPrecio').value)
+            };
+            
+            try {
+                let response;
+                if (id === '') {
+                    // Agregar nuevo
+                    response = await fetch('/api/productos/agregar', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(data)
+                    });
+                } else {
+                    // Editar existente
+                    response = await fetch(`/api/productos/editar/${id}`, {
+                        method: 'PUT',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(data)
+                    });
+                }
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    mostrarAlerta(result.message, 'success');
+                    cerrarModal();
+                    cargarProductos();
+                } else {
+                    mostrarAlerta('Error: ' + result.error, 'error');
+                }
+            } catch (error) {
+                mostrarAlerta('Error de conexión: ' + error.message, 'error');
+            }
+        }
+        
+        async function eliminarProducto(id) {
+            if (!confirm('¿Estás seguro de eliminar este producto?')) return;
+            
+            try {
+                const response = await fetch(`/api/productos/eliminar/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    mostrarAlerta(result.message, 'success');
+                    cargarProductos();
+                } else {
+                    mostrarAlerta('Error: ' + result.error, 'error');
+                }
+            } catch (error) {
+                mostrarAlerta('Error de conexión: ' + error.message, 'error');
+            }
+        }
+        
+        async function regenerarCatalogo() {
+            if (!confirm('¿Regenerar el catálogo público con los datos actuales?')) return;
+            
+            mostrarAlerta('Regenerando catálogo...', 'success');
+            
+            try {
+                const response = await fetch('/api/regenerar-catalogo', {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    mostrarAlerta('✅ ' + result.message + ' - Recuerda subir los cambios a GitHub si es necesario', 'success');
+                } else {
+                    mostrarAlerta('Error: ' + result.error, 'error');
+                }
+            } catch (error) {
+                mostrarAlerta('Error de conexión: ' + error.message, 'error');
+            }
+        }
+        
+        function abrirModalSubirExcel() {
+            document.getElementById('excelFile').value = '';
+            document.getElementById('accionExcel').value = 'reemplazar';
+            document.getElementById('excelModal').classList.add('active');
+        }
+        
+        function cerrarModalExcel() {
+            document.getElementById('excelModal').classList.remove('active');
+        }
+        
+        async function subirExcel(event) {
+            event.preventDefault();
+            
+            const fileInput = document.getElementById('excelFile');
+            const accion = document.getElementById('accionExcel').value;
+            
+            if (!fileInput.files || fileInput.files.length === 0) {
+                mostrarAlerta('Por favor selecciona un archivo', 'error');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('accion', accion);
+            
+            mostrarAlerta('Subiendo archivo...', 'success');
+            
+            try {
+                const response = await fetch('/api/subir-excel', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    mostrarAlerta('✅ ' + result.message, 'success');
+                    cerrarModalExcel();
+                    cargarProductos();
+                } else {
+                    mostrarAlerta('Error: ' + result.error, 'error');
+                }
+            } catch (error) {
+                mostrarAlerta('Error de conexión: ' + error.message, 'error');
+            }
+        }
+        
+        function mostrarAlerta(mensaje, tipo) {
+            const alert = document.getElementById('alert');
+            alert.textContent = mensaje;
+            alert.className = `alert alert-${tipo === 'success' ? 'success' : 'error'} show`;
+            
+            setTimeout(() => {
+                alert.classList.remove('show');
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
